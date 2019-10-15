@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
 import { HibsContractInfo } from '../../components/HibsContractInfo';
-import { HibsDemos } from '../../components/HibsDemos';
 
-export class MainPage extends Component {
+export class TryMethod extends Component {
   constructor() {
     super();
     this.state = {
@@ -13,10 +12,10 @@ export class MainPage extends Component {
     return (
       <div>
         <HibsContractInfo />
-        <HibsDemos />
+
       </div>
     );
   }
 }
 
-export default MainPage;
+export default TryMethod;
