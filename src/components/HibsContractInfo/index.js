@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { ContractInstance } from '../../js/klayApiManager';
+import { contract } from '../../js/klayApiManager';
 import './index.scss';
 
 export class HibsContractInfo extends Component {
@@ -13,7 +13,6 @@ export class HibsContractInfo extends Component {
   }
 
   componentDidMount() {
-    const contract = ContractInstance;
     contract.methods.totalSupply().call().then((res) => {
       this.setState({ totalSupply: res });
     });

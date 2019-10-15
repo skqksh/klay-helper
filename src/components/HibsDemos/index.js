@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import _ from 'lodash';
 import {
-  ContractInstance, KlayInstance, UtilsInstance, GetWalletInstance,
+  contract, klay, utils, GetWallet,
 } from '../../js/klayApiManager';
 
 const privateKey = '0x8e234d0fb9aa5bc206a1bbfde9157ae3de2518941d42c161ac74a1d0d3894f8a';
@@ -13,12 +13,9 @@ export class HibsDemos extends Component {
     this.state = {
       testResult: [],
     };
-    const walletInstance = GetWalletInstance(privateKey);
+    const walletInstance = GetWallet(privateKey);
     const { address } = walletInstance;
     this.address = address;
-    this.klay = KlayInstance;
-    this.utils = UtilsInstance;
-    this.contractMethod = ContractInstance.methods;
   }
 
   componentDidMount() {
@@ -26,9 +23,36 @@ export class HibsDemos extends Component {
   }
 
   TestAndSetResult = () => {
+    this.klayTest();
+    this.contractTest();
+  }
+
+  contractTest() {
+    const testMethodList = [];
+    testMethodList.push({ name: 'totalBalanceOf', param: ['address'], resExp: (res) => res });
+
+    _.forEach(testMethodList, (test) => {
+      const param = _.map(test.param, (val) => {
+        switch (val) {
+          case 'address': return this.address;
+          case 'privateKey': return privateKey;
+          case 'txHash': return txHash;
+          default:
+            return val;
+        }
+      });
+      const ccont = contract;
+      ccont.methods[test.name](...param)
+        .call()
+        .then((res) => this.addTestResult(`contract.method.${test.name}(${test.param})`, test.resExp ? test.resExp(res) : res, false))
+        .catch((error) => this.addTestResult(`contract.method.${test.name}(${test.param})`, error.toString(), true));
+    });
+  }
+
+  klayTest() {
     const klayTestMethodList = [];
     klayTestMethodList.push({ name: 'getAccounts', param: [] });
-    klayTestMethodList.push({ name: 'getBalance', param: ['address'], resExp: (res) => `${this.utils.fromWei(res, 'ether')}(-> utils.fromWei(res, 'ether'))` });
+    klayTestMethodList.push({ name: 'getBalance', param: ['address'], resExp: (res) => `${utils.fromWei(res, 'ether')}(-> utils.fromWei(res, 'ether'))` });
     klayTestMethodList.push({ name: 'getTransaction', param: ['txHash'], resExp: (res) => JSON.stringify(res, null, 6) });
     klayTestMethodList.push({ name: 'getTransactionBySenderTxHash', param: ['txHash'], resExp: (res) => JSON.stringify(res, null, 6) });
     klayTestMethodList.push({ name: 'getTransactionCount', param: ['address'] });
@@ -48,7 +72,8 @@ export class HibsDemos extends Component {
             return val;
         }
       });
-      this.klay[test.name](...param)
+      const cklay = klay;
+      cklay[test.name](...param)
         .then((res) => this.addTestResult(`klay.${test.name}(${test.param})`, test.resExp ? test.resExp(res) : res, false))
         .catch((error) => this.addTestResult(`klay.${test.name}(${test.param})`, error.toString(), true));
     });
