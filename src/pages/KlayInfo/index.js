@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import _ from 'lodash';
+import BN from 'bignumber.js';
 import {
   klay, contract, utils,
 } from '../../js/klayApiManager';
@@ -10,38 +11,82 @@ class KlayInfo extends Component {
     this.state = {
       lastBlockNumber: 0,
       blockList: [],
+      tokenName: '',
+      tokenDecimal: '',
     };
     this.klay = klay;
     this.contract = contract;
     this.utils = utils;
+    this.getTokenInfo();
   }
 
   componentDidMount() {
-    const bNo = '9660832'; // latest
+    const bNo = 'latest'; // '9670659'
     this.klay.getBlock(bNo).then((res) => {
       this.setState({ lastBlockNumber: res.number });
-      this.getAllBlocks();
+      this.getBlocks(20);
     });
   }
 
-  getAllBlocks() {
+  getBlocks(cnt) {
     const { lastBlockNumber } = this.state;
     let nolastBlockNumber = Number(lastBlockNumber);
-    _.times(100, () => this.getBlockAndSetData(--nolastBlockNumber));
+    _.times(cnt, () => {
+      this.getBlockAndSetData(--nolastBlockNumber);
+    });
+  }
+
+  getTokenInfo() {
+    this.contract.methods.name().call()
+      .then((tokenName) => { this.setState({ tokenName }); });
+    this.contract.methods.decimals().call()
+      .then((tokenDecimal) => { this.setState({ tokenDecimal }); });
+  }
+
+  handleTxInputData = (inputData) => {
+    const { tokenDecimal } = this.state;
+    if (_.size(inputData) === 138) {
+      const method = inputData.substring(0, 10);
+      const to = inputData.substring(10, 74);
+      const value = BN(this.utils.hexToNumberString(inputData.substring(74)))
+        .dividedBy(10 ** tokenDecimal).toString();
+      return { method, to, value };
+    }
+    return {};
+  }
+
+  displayTokenTransferInfo = (from, inputData) => {
+    const { to, value } = this.handleTxInputData(inputData);
+    return (
+      <div>
+        <div>
+          <b>from : </b>
+          {from}
+        </div>
+        <div>
+          <b>to : </b>
+          {to}
+        </div>
+        <div>
+          <b>amount : </b>
+          {value}
+        </div>
+      </div>
+    );
   }
 
   getBlockAndSetData = (blockNumber) => {
-    this.klay.getBlock(blockNumber).then((res) => {
+    this.klay.getBlock(blockNumber, true).then((res) => {
       this.addBlock(res);
+      this.setState({ lastBlockNumber: blockNumber });
     });
   }
 
-  getTxInfo = (txHash) => {
-    this.klay.getTransactionReceipt(txHash).then((res) => {
-
-      console.log(res);
-      console.log(this.utils);
-    });
+  handleScroll = (e) => {
+    const element = e.target;
+    if (element.scrollHeight - element.scrollTop === element.clientHeight) {
+      // do something at end of scroll
+    }
   }
 
   addBlock(block) {
@@ -72,13 +117,15 @@ class KlayInfo extends Component {
                     {block.blockscore}
                   </div>
                   <div>
-                    <span>gasUsed : </span>
-                    {block.gasUsed}
-                  </div>
-                  <div>
                     <span>governanceData : </span>
                     {block.governanceData}
                   </div>
+
+                  <div>
+                    <span>gasUsed : </span>
+                    {block.gasUsed}
+                  </div>
+
                   <div>
                     <span>hash : </span>
                     {block.hash}
@@ -99,6 +146,7 @@ class KlayInfo extends Component {
                     <span>size : </span>
                     {block.size}
                   </div>
+
                   <div>
                     <span>stateRoot : </span>
                     {block.stateRoot}
@@ -118,16 +166,16 @@ class KlayInfo extends Component {
                   <div>
                     <span>transactions : </span>
                     {_.map(block.transactions, (tx, txIndex) => (
-                      <div key={txIndex} onClick={() => { this.getTxInfo(tx); }}>
+                      <div key={txIndex}>
                         <b>{txIndex}</b>
                         <span> : </span>
-                        <span className="badge badge-primary">{tx}</span>
+                        <span className="badge badge-primary">{tx.hash}</span>
+                        <hr />
+                        <div>
+                          {this.displayTokenTransferInfo(tx.from, tx.input)}
+                        </div>
                       </div>
                     ))}
-                  </div>
-                  <div>
-                    <span>transactionsRoot : </span>
-                    {block.transactionsRoot}
                   </div>
                 </td>
 
@@ -135,6 +183,9 @@ class KlayInfo extends Component {
             ))}
           </tbody>
         </table>
+        <div>
+          <button type="button" onClick={() => this.getBlocks(10)}>더보기</button>
+        </div>
       </div>
     );
   }
