@@ -11,7 +11,6 @@ export class JsonInterface extends Component {
 
   componentDidMount() {
     const JsonInterface = contract._jsonInterface;
-    console.log(JsonInterface);
   }
 
   render() {

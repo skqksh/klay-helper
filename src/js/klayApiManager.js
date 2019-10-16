@@ -13,13 +13,11 @@ const formatters = (() => caver.formatters)();
 
 const utils = (() => caver.utils)();
 
-const testInstance = (() => {
-  const test = caver;
-  console.log(test);
-  return caver.utils;
+const testInt = (() => {
+  const cc = caver;
+  console.log(cc);
+  return caver;
 })();
-
-console.log(testInstance);
 
 const GetWallet = (privateKey) => caver.klay.accounts.privateKeyToAccount(privateKey);
 

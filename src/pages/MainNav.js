@@ -16,7 +16,8 @@ class MainNav extends Component {
         <ul className="main_nav_list">
           <li><Link to="/">Home</Link></li>
           <li><Link to="/trymethod">Try Method</Link></li>
-          <li><Link to="/hibsContract">HIBS Contract</Link></li>
+          <li><Link to="/hibscontract">HIBS Contract</Link></li>
+          <li><Link to="/klayinfo">KlayInfo</Link></li>
         </ul>
         <div className="main_nav_right">
           <b>rpcURL : </b>
